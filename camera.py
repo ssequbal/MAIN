@@ -18,6 +18,7 @@ def take_picture(filename, destination, iso, shutter, aperture):
     if not os.path.exists(destination):
         os.mkdir(destination)
 
+
     # Setting up the gphoto2 commands
     set_iso_cmd = f"gphoto2 --set-config iso={iso}"
     set_shutter_cmd = f"gphoto2 --set-config shutterspeed={shutter}"
@@ -72,9 +73,8 @@ def main():
         take_picture("green_dot.jpg", "green_dot_image", iso, shutter_speed, aperture_value)
 
     if args.main:
+        time.sleep(5)
         take_picture("main.jpg", "aruco_image", iso, shutter_speed, aperture_value)
-
-
 
 if __name__ == "__main__":
     main()

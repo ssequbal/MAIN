@@ -3,7 +3,6 @@ import os
 import cv2
 import numpy as np
 
-
 def calibrate_camera(image_dir, x_dim, y_dim, square_size):
     # Termination criteria for corner refinement
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.0001)
@@ -19,6 +18,11 @@ def calibrate_camera(image_dir, x_dim, y_dim, square_size):
     if not images:
         raise FileNotFoundError("No images found in the specified directory")
 
+     # Create "detected" folder to save images with detected corners
+    detected_folder = os.path.join(image_dir, "detected")
+    if not os.path.exists(detected_folder):
+        os.makedirs(detected_folder)
+ 
     found_count = 0
     for filename in images:
         img = cv2.imread(filename)
@@ -39,13 +43,12 @@ def calibrate_camera(image_dir, x_dim, y_dim, square_size):
 
             # Draw and display the corners
             cv2.drawChessboardCorners(img, (x_dim, y_dim), corners2, ret)
-            cv2.imwrite("detected_corners_" + str(found_count) + ".png", img)
+            output_filename = os.path.join(detected_folder, f"detected_corners_{found_count}.png")
+            cv2.imwrite(output_filename, img)
             print(f"Detected corners in image {found_count}")
 
     if found_count == 0:
-        raise ValueError(
-            "No chessboard corners found in any image. Calibration failed."
-        )
+        raise ValueError("No chessboard corners found in any image. Calibration failed.")
 
     # Calibrate the camera
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
@@ -53,6 +56,14 @@ def calibrate_camera(image_dir, x_dim, y_dim, square_size):
     )
 
     print(f"Performed calibration on {found_count} images")
+    print(f"Re-projection error: {ret}")
+    print(f"Camera matrix: \n{mtx}")
+    print(f"Distortion coefficients: \n{dist}")
+
+    # Extract radial and tangential distortion coefficients
+    k1, k2, p1, p2, k3 = dist[0][:5]
+    print(f"Radial distortion coefficients: k1={k1}, k2={k2}, k3={k3}")
+    print(f"Tangential distortion coefficients: p1={p1}, p2={p2}")
 
     # Save calibration results
     save_dir = "calibration"
@@ -64,4 +75,7 @@ def calibrate_camera(image_dir, x_dim, y_dim, square_size):
     np.save(os.path.join(save_dir, "translation_vectors.npy"), tvecs)
     np.save(os.path.join(save_dir, "rotation_vectors.npy"), rvecs)
 
-    return mtx, dist
+    return mtx, dist, (k1, k2, k3), (p1, p2)
+
+# Example usage
+#camera_matrix, distortion_coefficients, radial_distortion, tangential_distortion = calibrate_camera("calibration_images", 8, 6, 0.02)
