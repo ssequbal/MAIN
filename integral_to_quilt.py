@@ -48,9 +48,9 @@ def convert(image_path, num_sub_images, num_slices_per_image):
 # Usage
 image_path = 'a.png' 
 num_sub_images = 420
-num_slices_per_image = 42
+directional_resolution = 42
 
-final_img = convert(image_path, num_sub_images, num_slices_per_image)   
+final_img = convert(image_path, num_sub_images, directional_resolution)   
 
 
 final_img.save('final_image.png')
