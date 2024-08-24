@@ -3,6 +3,16 @@ import numpy as np
 from calibration import calibrate_camera
 import argparse
 import os 
+from configparser import ConfigParser
+import time
+
+# Read from the configuration file
+config = ConfigParser()
+config.read("config.txt")
+
+# Read marker size values
+displayMarkerSize = config.getfloat("Aruco", "displayMarkerSize")  
+offsetMarkerSize = config.getfloat("Aruco", "offsetMarkerSize")  
 
 # Function used to calculate the Difference in Tvec and Rvec between the two aruco markers
 def pose_estimation(image_path,aruco_dict_types,matrix_coefficients,distortion_coefficients,marker_size=0.02):
@@ -27,9 +37,9 @@ def pose_estimation(image_path,aruco_dict_types,matrix_coefficients,distortion_c
         if len(corners) > 0:
             for i in range(len(ids)):
                 if ids[i] == 4:
-                    marker_size=0.1
+                    marker_size=offsetMarkerSize
                 else:
-                    marker_size=0.025
+                    marker_size=displayMarkerSize
                 rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners[i],marker_size,matrix_coefficients,distortion_coefficients)
 
                 print(f"Marker ID {ids[i]} - Translation Vector: {tvec}, Rotation Vector: {rvec}")
@@ -83,7 +93,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Camera calibration script")
 
-    parser.add_argument("--aruco_image", action="store_true", help="Run aruco calibration")
+    parser.add_argument("--aruco_image", action="store_true", help="Find transformation and rotation offset between the two aruco markers")
     parser.add_argument("--main_image", action="store_true", help="Run main calibration")
 
     args = parser.parse_args()
@@ -97,7 +107,7 @@ def main():
 
     if args.aruco_image:
         aruco_dict_types = [ cv2.aruco.DICT_6X6_100,cv2.aruco.DICT_5X5_100]
-        rvec_marker_difference, tvec_marker_difference = pose_estimation( "aruco.jpg", aruco_dict_types, mtx, dist)
+        rvec_marker_difference, tvec_marker_difference = pose_estimation("aruco_image/aruco.jpg", aruco_dict_types, mtx, dist)
         np.save(os.path.join(save_dir, "difference_tvec_matrix.npy"), tvec_marker_difference)
         np.save(os.path.join(save_dir, "difference_rvec_matrix.npy"), rvec_marker_difference)
 
@@ -107,7 +117,7 @@ def main():
         diff_rvec = np.load("difference_mtx/difference_rvec_matrix.npy")
         diff_tvec = np.load("difference_mtx/difference_tvec_matrix.npy") 
         
-        rvec,tvec=detect_single_marker("aruco_image/aruco.jpg",aruco_dict_types,mtx,dist,diff_rvec,diff_tvec)
+        rvec,tvec=detect_single_marker("aruco_image/main.jpg",aruco_dict_types,mtx,dist,diff_rvec,diff_tvec)
 
         print("diff",tvec,rvec)
 

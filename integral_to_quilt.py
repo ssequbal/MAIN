@@ -1,5 +1,6 @@
 from PIL import Image
 import numpy as np
+import argparse
 
 def convert(image_path, num_sub_images, num_slices_per_image):
     img = Image.open(image_path)
@@ -45,12 +46,18 @@ def convert(image_path, num_sub_images, num_slices_per_image):
     
     return final_img
 
-# Usage
-image_path = 'a.png' 
-num_sub_images = 420
-directional_resolution = 42
 
-final_img = convert(image_path, num_sub_images, directional_resolution)   
+def main():
+    # Argument parser setup
+    parser = argparse.ArgumentParser(description="Integral Image to quilt script")
+    parser.add_argument("--directional_resolution", type=int,default=42)
+    parser.add_argument('--image_path', type=str, default='camNamesubCam_0_0_Shape_Beauty_0001_1.png', help='Path to the input image.')
+    parser.add_argument('--num_sub_images', type=int, default=420)
 
+    args = parser.parse_args()
 
-final_img.save('final_image.png')
+    final_img = convert(args.image_path, args.num_sub_images, args.directional_resolution)
+    final_img.save('converted_quilt.png')
+
+if __name__ == "__main__":
+    main()

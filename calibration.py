@@ -2,6 +2,7 @@ import glob
 import os
 import cv2
 import numpy as np
+import argparse
 
 def calibrate_camera(image_dir, x_dim, y_dim, square_size):
     # Termination criteria for corner refinement
@@ -56,26 +57,51 @@ def calibrate_camera(image_dir, x_dim, y_dim, square_size):
     )
 
     print(f"Performed calibration on {found_count} images")
-    print(f"Re-projection error: {ret}")
-    print(f"Camera matrix: \n{mtx}")
-    print(f"Distortion coefficients: \n{dist}")
+
 
     # Extract radial and tangential distortion coefficients
     k1, k2, p1, p2, k3 = dist[0][:5]
-    print(f"Radial distortion coefficients: k1={k1}, k2={k2}, k3={k3}")
-    print(f"Tangential distortion coefficients: p1={p1}, p2={p2}")
-
-    # Save calibration results
+    # Write the radial and tangential distortion coefficients to a file
     save_dir = "calibration"
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
+    distortion_file_path = os.path.join(save_dir, "distortion_coefficients.txt")
+    with open(distortion_file_path, "w") as f:
+        f.write(f"Radial distortion coefficients:\n")
+        f.write(f"k1={k1}\n")
+        f.write(f"k2={k2}\n")
+        f.write(f"k3={k3}\n")
+        f.write(f"\nTangential distortion coefficients:\n")
+        f.write(f"p1={p1}\n")
+        f.write(f"p2={p2}\n")
+        f.write(f"\nReprojection Error\n")
+        f.write(f"{ret}\n")
+
+    
+    print(f"Radial and tangential distortion coefficients saved to {distortion_file_path}")
+
+    # Save calibration results
     np.save(os.path.join(save_dir, "cam_matrix.npy"), mtx)
     np.save(os.path.join(save_dir, "distortion_matrix.npy"), dist)
-    np.save(os.path.join(save_dir, "translation_vectors.npy"), tvecs)
-    np.save(os.path.join(save_dir, "rotation_vectors.npy"), rvecs)
+
 
     return mtx, dist, (k1, k2, k3), (p1, p2)
 
-# Example usage
-#camera_matrix, distortion_coefficients, radial_distortion, tangential_distortion = calibrate_camera("calibration_images", 8, 6, 0.02)
+
+
+def main():
+    # Argument parser setup
+    parser = argparse.ArgumentParser(description="Calibration script")
+    parser.add_argument("--image_path", type=str,default="calibration_images")
+    parser.add_argument('--column_count', type=int, default=8)
+    parser.add_argument('--row_count', type=int, default=6)
+    parser.add_argument('--aruco_size', type=int, default=0.02)
+
+    args = parser.parse_args()
+
+    calibrate_camera(args.image_path, args.column_count, args.row_count,args.aruco_size)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,20 @@
+# Configuration file for motion control parameters
+
+[Serial]
+serial_port: COM3
+baud_rate: 9600
+
+[Motion]
+num_iterations: 10
+direction: X
+displacement_value: 10000
+speed_value: 255
+
+[Camera]
+iso_value: 100
+shutter_speed: 1/17
+aperture_value: 3.5
+
+[Aruco]
+displayMarkerSize: 0.1
+offsetMarkerSize: 0.025
