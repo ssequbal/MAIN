@@ -1,8 +1,17 @@
 import cv2
 import numpy as np
+from configparser import ConfigParser
+
+# Read from the configuration file
+config = ConfigParser()
+config.read("config.txt")
+
+# Read marker size values
+y_dim = config.getfloat("Looking_Glass_Portrait", "y_dim")  
+x_dim = config.getfloat("Looking_Glass_Portrait", "x_dim")  
 
 # Load the image
-image = cv2.imread('green.jpg')
+image = cv2.imread('green_dot_image/green.jpg')
 
 # Convert the image to grayscale for Aruco detection
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -16,6 +25,7 @@ corners, ids, rejected = cv2.aruco.detectMarkers(gray, aruco_dict, parameters=pa
 
 # Assuming there is only one Aruco marker and taking the first one detected
 if ids is not None and len(corners) > 0:
+
     # Get the center of the Aruco marker
     aruco_center = np.mean(corners[0][0], axis=0)
     aruco_center = tuple(aruco_center.astype(int))
@@ -49,11 +59,19 @@ if ids is not None and len(corners) > 0:
             # Convert pixel distances to real-world distances
             real_x_distance = x_distance / pixel_per_meter
             real_y_distance = y_distance / pixel_per_meter
+            real_center_x_distance=real_x_distance - (x_dim/2)
+            real_center_y_distance=real_y_distance - (y_dim/2)
            
             print(f"Pixel Distance in X: {x_distance:.2f} pixels")
             print(f"Pixel Distance in Y: {y_distance:.2f} pixels")
             print(f"Real World Distance in X: {real_x_distance:.2f} meters")
             print(f"Real World Distance in Y: {real_y_distance:.2f} meters")
+            print(f"Real World Distance from center in X: {real_center_x_distance:.2f} meters")
+            print(f"Real World Distance from center in Y: {real_center_y_distance:.2f} meters")
+
+            # Save distances to .npy file
+            distances = np.array([real_center_x_distance, real_center_y_distance])
+            np.save('green_dot_center_transforms.npy', distances)
         else:
             print("Could not find the center of the green dot.")
     else:

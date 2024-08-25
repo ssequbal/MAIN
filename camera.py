@@ -52,25 +52,25 @@ def main():
     # Argument parser setup
     parser = argparse.ArgumentParser(description="Camera calibration script")
 
-    parser.add_argument("--calibrate_camera", type=int, help="Number of times to run camera calibration")
+    parser.add_argument("--calibrate", type=int, help="Number of times to run camera calibration")
     parser.add_argument("--aruco_image", action="store_true", help="Run aruco calibration")
-    parser.add_argument("--green_dot", action="store_true", help="Run aruco calibration")
+    parser.add_argument("--green", action="store_true", help="Run aruco calibration")
     parser.add_argument("--main", action="store_true", help="Run aruco calibration")
 
 
     args = parser.parse_args()
 
-    if args.calibrate_camera:
-        for i in range(args.calibrate_camera):
+    if args.calibrate:
+        for i in range(args.calibrate):
             raw_image_name = f"{i}.jpg"
             take_picture(raw_image_name, "calibration_images", iso, shutter_speed, aperture_value)
 
     if args.aruco_image:
         take_picture("aruco.jpg", "aruco_image", iso, shutter_speed, aperture_value)
 
-    if args.green_dot:
+    if args.green:
         time.sleep(5)
-        take_picture("green_dot.jpg", "green_dot_image", iso, shutter_speed, aperture_value)
+        take_picture("green.jpg", "green_dot_image", iso, shutter_speed, aperture_value)
 
     if args.main:
         time.sleep(5)

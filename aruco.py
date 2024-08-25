@@ -37,9 +37,9 @@ def pose_estimation(image_path,aruco_dict_types,matrix_coefficients,distortion_c
         if len(corners) > 0:
             for i in range(len(ids)):
                 if ids[i] == 4:
-                    marker_size=offsetMarkerSize
-                else:
                     marker_size=displayMarkerSize
+                else:
+                    marker_size=offsetMarkerSize
                 rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners[i],marker_size,matrix_coefficients,distortion_coefficients)
 
                 print(f"Marker ID {ids[i]} - Translation Vector: {tvec}, Rotation Vector: {rvec}")
@@ -57,7 +57,7 @@ def pose_estimation(image_path,aruco_dict_types,matrix_coefficients,distortion_c
 
             cv2.imwrite("output_image_with_markers.jpg", frame)
 
-    return rvec_marker_5-rvec_marker_4, tvec_marker_5-tvec_marker_4
+    return rvec_marker_4, tvec_marker_5-tvec_marker_4
 
 
 # Function used to calculate the Tvec and Rvec between the single aruco marker and the camera with adjusted values
@@ -80,7 +80,7 @@ def detect_single_marker(image_path,aruco_dict_types,matrix_coefficients,distort
             cv2.imwrite("DetectedArUcoMarker.jpg", frame)
 
 
-            return rvec-diff_rvec , tvec- diff_tvec
+            return rvec, tvec-diff_tvec
         else:
             print("Error: No markers found.")
             return None, None
@@ -99,6 +99,7 @@ def main():
     args = parser.parse_args()
     mtx = np.load("calibration/cam_matrix.npy")
     dist = np.load("calibration/distortion_matrix.npy")
+    green_pixel=np.load("green_dot_center_transforms.npy") 
 
     # Save calibration results
     save_dir = "difference_mtx"
@@ -117,38 +118,24 @@ def main():
         diff_rvec = np.load("difference_mtx/difference_rvec_matrix.npy")
         diff_tvec = np.load("difference_mtx/difference_tvec_matrix.npy") 
         
+        # Negative sign is added in the y direction due to the different coordinate system from the green pixel approach
+        diff_tvec=[green_pixel[0],-green_pixel[1],0]
+        
         rvec,tvec=detect_single_marker("aruco_image/main.jpg",aruco_dict_types,mtx,dist,diff_rvec,diff_tvec)
 
-        print("diff",tvec,rvec)
+        save_dir = "final"
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
 
-        # # Extract position (translation vector)
-        # position = tvec[0][0]
-
-
-        # # Convert rotation vector to rotation matrix
-        # rotation_matrix, _ = cv2.Rodrigues(rvec[0][0])
-
-        # # Convert rotation matrix to Euler angles (X, Y, Z rotation)
-        # def rotation_matrix_to_euler_angles(R):
-        #     sy = np.sqrt(R[0, 0] ** 2 + R[1, 0] ** 2)
-        #     singular = sy < 1e-6
-
-        #     if not singular:
-        #         x = np.arctan2(R[2, 1], R[2, 2])
-        #         y = np.arctan2(-R[2, 0], sy)
-        #         z = np.arctan2(R[1, 0], R[0, 0])
-        #     else:
-        #         x = np.arctan2(-R[1, 2], R[1, 1])
-        #         y = np.arctan2(-R[2, 0], sy)
-        #         z = 0
-
-        #     return np.array([x, y, z])
-
-        # orientation = rotation_matrix_to_euler_angles(rotation_matrix)
-
-        # print("Position (X, Y, Z):", position)
-        # print("Orientation (rotation around X, Y, Z):", orientation)
-
+        distortion_file_path = os.path.join(save_dir, "final_values.txt")
+        with open(distortion_file_path, "w") as f:
+            f.write(f"flip signs for x and y for simulator\n")
+            f.write(f"Eye:\n")
+            f.write(f"{tvec}")
+            f.write(f"\nLookAt:\n")
+            f.write(f"{0,0,0}\n")
+            f.write(f"Up\n")
+            f.write(f"[{0,-1,0}]\n")
 
 
 if __name__ == "__main__":
