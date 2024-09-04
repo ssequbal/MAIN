@@ -56,6 +56,7 @@ def main():
     parser.add_argument("--aruco_image", action="store_true", help="Run aruco calibration")
     parser.add_argument("--green", action="store_true", help="Run aruco calibration")
     parser.add_argument("--main", action="store_true", help="Run aruco calibration")
+    parser.add_argument("--dark", action="store_true", help="Final Crop")
 
 
     args = parser.parse_args()
@@ -69,12 +70,14 @@ def main():
         take_picture("aruco.jpg", "aruco_image", iso, shutter_speed, aperture_value)
 
     if args.green:
-        time.sleep(5)
+       
         take_picture("green.jpg", "green_dot_image", iso, shutter_speed, aperture_value)
 
     if args.main:
-        time.sleep(5)
         take_picture("main.jpg", "aruco_image", iso, shutter_speed, aperture_value)
+
+    if args.dark:
+        take_picture("dark.jpg", "aruco_image", iso, shutter_speed, aperture_value)
 
 if __name__ == "__main__":
     main()

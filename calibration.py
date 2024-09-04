@@ -75,8 +75,7 @@ def calibrate_camera(image_dir, x_dim, y_dim, square_size):
         f.write(f"\nTangential distortion coefficients:\n")
         f.write(f"p1={p1}\n")
         f.write(f"p2={p2}\n")
-        f.write(f"\nReprojection Error\n")
-        f.write(f"{ret}\n")
+
 
     
     print(f"Radial and tangential distortion coefficients saved to {distortion_file_path}")
@@ -96,11 +95,11 @@ def main():
     parser.add_argument("--image_path", type=str,default="calibration_images")
     parser.add_argument('--column_count', type=int, default=8)
     parser.add_argument('--row_count', type=int, default=6)
-    parser.add_argument('--aruco_size', type=int, default=0.02)
+    parser.add_argument('--size', type=int, default=0.02)
 
     args = parser.parse_args()
 
-    calibrate_camera(args.image_path, args.column_count, args.row_count,args.aruco_size)
+    calibrate_camera(args.image_path, args.column_count, args.row_count,args.size)
 
 
 if __name__ == "__main__":

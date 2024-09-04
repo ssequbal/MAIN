@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Load the image
-image_path = 'aruco_image/main.jpg'
+image_path = 'aruco_image/dark.jpg'
 image = cv2.imread(image_path)
 
 # Convert to grayscale

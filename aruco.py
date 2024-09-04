@@ -5,6 +5,8 @@ import argparse
 import os 
 from configparser import ConfigParser
 import time
+import math
+import json
 
 # Read from the configuration file
 config = ConfigParser()
@@ -111,6 +113,7 @@ def main():
         rvec_marker_difference, tvec_marker_difference = pose_estimation("aruco_image/aruco.jpg", aruco_dict_types, mtx, dist)
         np.save(os.path.join(save_dir, "difference_tvec_matrix.npy"), tvec_marker_difference)
         np.save(os.path.join(save_dir, "difference_rvec_matrix.npy"), rvec_marker_difference)
+        
 
     if args.main_image:
         aruco_dict_types = [cv2.aruco.DICT_6X6_100]
@@ -123,19 +126,43 @@ def main():
         
         rvec,tvec=detect_single_marker("aruco_image/main.jpg",aruco_dict_types,mtx,dist,diff_rvec,diff_tvec)
 
+        # Convert rotation vector to rotation matrix
+        rotation_matrix, _ = cv2.Rodrigues(diff_rvec)
+    
+        # Calculate Euler angles from rotation matrix
+        sy = math.sqrt(rotation_matrix[0, 0] * rotation_matrix[0, 0] + rotation_matrix[1, 0] * rotation_matrix[1, 0])
+    
+        singular = sy < 1e-6  # If
+
+        if not singular:
+            x = math.atan2(rotation_matrix[2, 1], rotation_matrix[2, 2])
+            y = math.atan2(-rotation_matrix[2, 0], sy)
+            z = math.atan2(rotation_matrix[1, 0], rotation_matrix[0, 0])
+        else:
+            x = math.atan2(-rotation_matrix[1, 2], rotation_matrix[1, 1])
+            y = math.atan2(-rotation_matrix[2, 0], sy)
+            z = 0
+
+        euler_angles= np.array([x, y, z])  # Return angles in radians
+
         save_dir = "final"
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
         distortion_file_path = os.path.join(save_dir, "final_values.txt")
         with open(distortion_file_path, "w") as f:
-            f.write(f"flip signs for x and y for simulator\n")
-            f.write(f"Eye:\n")
-            f.write(f"{tvec}")
-            f.write(f"\nLookAt:\n")
-            f.write(f"{0,0,0}\n")
-            f.write(f"Up\n")
-            f.write(f"[{0,-1,0}]\n")
+            f.write(f"Camera Position:\n")
+            f.write(f"{0,0,0}")
+            f.write(f"\nCenter of Display Position:\n")
+            f.write(f"{tvec}\n")
+            f.write(f"Rvec of display:\n")
+            f.write(f"[{diff_rvec}]\n")
+            f.write(f"Rotation Matrix:\n")
+            f.write(f"[{rotation_matrix}]\n")
+            f.write(f"Viewing Direction:\n")
+            f.write(f"[{rotation_matrix[:,2]}]\n")
+            f.write(f"Euler Angle Rotation:\n")
+            f.write(f"[{euler_angles}]\n")
 
 
 if __name__ == "__main__":
